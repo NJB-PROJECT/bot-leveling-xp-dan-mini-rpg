@@ -1,18 +1,14 @@
 import aiosqlite
 import os
-import random
 
 DB_PATH = "data/rpg_bot.db"
 
-async def get_db_connection():
-    conn = await aiosqlite.connect(DB_PATH)
-    conn.row_factory = aiosqlite.Row
-    return conn
+# We export DB_PATH so Cogs can use aiosqlite.connect(DB_PATH) directly
+# This prevents the "RuntimeError: threads can only be started once" caused by reusing connection objects incorrectly.
 
 async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
         # Table: Users
-        # job_stage and job_data are for the realistic job loops
         await db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
@@ -33,7 +29,6 @@ async def init_db():
         """)
 
         # Table: Inventory
-        # stats_mod is a percentage (e.g., 1.0 = 100%, 0.9 = 90% stats due to refurbish)
         await db.execute("""
             CREATE TABLE IF NOT EXISTS inventory (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,7 +44,6 @@ async def init_db():
         """)
 
         # Table: Market (Singleton for Exchange Rate)
-        # tax_rate: percentage taken (e.g., 5 means 5%)
         await db.execute("""
             CREATE TABLE IF NOT EXISTS market (
                 id INTEGER PRIMARY KEY,
@@ -66,7 +60,6 @@ async def init_db():
                 await db.execute("INSERT INTO market (id, exchange_rate, is_dynamic, tax_rate) VALUES (1, 1.0, 1, 5)")
 
         # Table: Items (Catalog)
-        # Definitions of items available in shop
         await db.execute("""
             CREATE TABLE IF NOT EXISTS items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

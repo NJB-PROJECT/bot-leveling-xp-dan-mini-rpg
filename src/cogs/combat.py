@@ -2,7 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import random
-from database import get_db_connection
+import aiosqlite
+from database import DB_PATH
 
 class Combat(commands.Cog):
     def __init__(self, bot):
@@ -13,7 +14,8 @@ class Combat(commands.Cog):
         if target.id == interaction.user.id:
             return await interaction.response.send_message("Jangan serang diri sendiri!", ephemeral=True)
 
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             # Get Attacker
             cursor = await db.execute("SELECT * FROM users WHERE id = ?", (interaction.user.id,))
             attacker = await cursor.fetchone()
@@ -88,7 +90,8 @@ class Combat(commands.Cog):
         if target.id == interaction.user.id:
             return await interaction.response.send_message("Gila ya?", ephemeral=True)
 
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             # Check Tool
             cursor = await db.execute("SELECT * FROM inventory WHERE user_id = ? AND item_name = 'Lockpick'", (interaction.user.id,))
             tool = await cursor.fetchone()

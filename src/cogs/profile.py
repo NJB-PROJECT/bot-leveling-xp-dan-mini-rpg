@@ -1,7 +1,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from database import get_db_connection
+import aiosqlite
+from database import DB_PATH
 
 class Profile(commands.Cog):
     def __init__(self, bot):
@@ -20,7 +21,8 @@ class Profile(commands.Cog):
         user_id = interaction.user.id
         selected_role = role.value
 
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute("SELECT role FROM users WHERE id = ?", (user_id,))
             user = await cursor.fetchone()
 
@@ -60,7 +62,8 @@ class Profile(commands.Cog):
     async def status(self, interaction: discord.Interaction):
         user_id = interaction.user.id
 
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
             user = await cursor.fetchone()
 

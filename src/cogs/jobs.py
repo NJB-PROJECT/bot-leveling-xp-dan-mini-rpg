@@ -4,7 +4,8 @@ from discord.ext import commands
 import json
 import random
 import time
-from database import get_db_connection
+import aiosqlite
+from database import DB_PATH
 
 class Jobs(commands.Cog):
     def __init__(self, bot):
@@ -38,7 +39,8 @@ class Jobs(commands.Cog):
     @app_commands.command(name="cangkul", description="[Petani] Menggemburkan tanah (Butuh Cangkul).")
     async def cangkul(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             user = await self.get_user_job_data(db, user_id)
             if user['role'] != "Petani":
                 return await interaction.response.send_message("Kamu bukan Petani!", ephemeral=True)
@@ -57,7 +59,8 @@ class Jobs(commands.Cog):
     @app_commands.command(name="tanam", description="[Petani] Menanam bibit (Butuh Bibit Padi).")
     async def tanam(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             user = await self.get_user_job_data(db, user_id)
             if user['role'] != "Petani": return await interaction.response.send_message("Bukan Petani!", ephemeral=True)
 
@@ -78,7 +81,8 @@ class Jobs(commands.Cog):
     @app_commands.command(name="siram", description="[Petani] Menyiram tanaman.")
     async def siram(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             user = await self.get_user_job_data(db, user_id)
             if user['job_stage'] != "growing":
                 return await interaction.response.send_message("Tidak ada yang perlu disiram.", ephemeral=True)
@@ -94,7 +98,8 @@ class Jobs(commands.Cog):
     @app_commands.command(name="panen", description="[Petani] Memanen hasil.")
     async def panen(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             user = await self.get_user_job_data(db, user_id)
             if user['job_stage'] != "growing":
                 return await interaction.response.send_message("Belum ada tanaman.", ephemeral=True)
@@ -120,7 +125,8 @@ class Jobs(commands.Cog):
     @app_commands.command(name="masak", description="[Koki] Mulai memasak (Butuh Panci & Bahan).")
     async def masak(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             user = await self.get_user_job_data(db, user_id)
             if user['role'] != "Koki": return await interaction.response.send_message("Bukan Koki!", ephemeral=True)
 
@@ -140,7 +146,8 @@ class Jobs(commands.Cog):
     @app_commands.command(name="hidangkan", description="[Koki] Hidangkan masakan.")
     async def hidangkan(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             user = await self.get_user_job_data(db, user_id)
             if user['job_stage'] != "cooking": return await interaction.response.send_message("Kamu belum memasak.", ephemeral=True)
 
@@ -162,7 +169,8 @@ class Jobs(commands.Cog):
     @app_commands.command(name="latih", description="[Pelatih] Melatih murid (Butuh waktu).")
     async def latih(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             user = await self.get_user_job_data(db, user_id)
             if user['role'] != "Pelatih": return await interaction.response.send_message("Bukan Pelatih!", ephemeral=True)
 
@@ -184,7 +192,8 @@ class Jobs(commands.Cog):
     @app_commands.command(name="pajak_rakyat", description="[Pangeran] Menarik upeti dari rakyat.")
     async def pajak_rakyat(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             user = await self.get_user_job_data(db, user_id)
             if user['role'] != "Pangeran": return await interaction.response.send_message("Hanya Pangeran!", ephemeral=True)
 
@@ -204,7 +213,8 @@ class Jobs(commands.Cog):
     @app_commands.command(name="diplomasi", description="[Putri] Melakukan diplomasi antar kerajaan.")
     async def diplomasi(self, interaction: discord.Interaction):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             user = await self.get_user_job_data(db, user_id)
             if user['role'] != "Putri": return await interaction.response.send_message("Hanya Putri!", ephemeral=True)
 

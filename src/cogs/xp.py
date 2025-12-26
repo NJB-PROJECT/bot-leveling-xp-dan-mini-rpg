@@ -3,7 +3,8 @@ from discord.ext import commands, tasks
 import random
 import time
 import asyncio
-from database import get_db_connection
+import aiosqlite
+from database import DB_PATH
 
 class XPSystem(commands.Cog):
     def __init__(self, bot):
@@ -23,7 +24,8 @@ class XPSystem(commands.Cog):
         return (xp // 100) + 1
 
     async def add_xp(self, user_id, amount):
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             # Check if user exists, if not create basic entry
             cursor = await db.execute("SELECT xp, role FROM users WHERE id = ?", (user_id,))
             user = await cursor.fetchone()

@@ -3,7 +3,8 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import os
 import random
-from database import get_db_connection
+import aiosqlite
+from database import DB_PATH
 
 class Exchange(commands.Cog):
     def __init__(self, bot):
@@ -17,9 +18,19 @@ class Exchange(commands.Cog):
     @tasks.loop(hours=1)
     async def rate_fluctuation(self):
         """Randomly changes exchange rate if dynamic mode is on."""
-        async with await get_db_connection() as db:
-            cursor = await db.execute("SELECT is_dynamic FROM market WHERE id = 1")
-            market = await cursor.fetchone()
+        try:
+            async with aiosqlite.connect(DB_PATH) as db:
+                db.row_factory = aiosqlite.Row
+                cursor = await db.execute("SELECT is_dynamic FROM market WHERE id = 1")
+                market = await cursor.fetchone()
+
+                if market and market['is_dynamic']:
+                    # Rate fluctuates between 0.8 and 1.2
+                    new_rate = round(random.uniform(0.8, 1.2), 2)
+                    await db.execute("UPDATE market SET exchange_rate = ? WHERE id = 1", (new_rate,))
+                    await db.commit()
+        except Exception as e:
+            print(f"Error in rate_fluctuation: {e}")
 
             if market and market['is_dynamic']:
                 # Rate fluctuates between 0.8 and 1.2
@@ -29,7 +40,8 @@ class Exchange(commands.Cog):
 
     @app_commands.command(name="cek_kurs", description="Cek nilai tukar XP ke Point saat ini.")
     async def cek_kurs(self, interaction: discord.Interaction):
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute("SELECT exchange_rate, tax_rate FROM market WHERE id = 1")
             market = await cursor.fetchone()
 
@@ -47,7 +59,8 @@ class Exchange(commands.Cog):
 
         user_id = interaction.user.id
 
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             # Check Balance
             cursor = await db.execute("SELECT xp, point, role FROM users WHERE id = ?", (user_id,))
             user = await cursor.fetchone()
@@ -110,7 +123,8 @@ class Exchange(commands.Cog):
 
         is_dynamic = 1 if mode == "dynamic" else 0
 
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             await db.execute("UPDATE market SET is_dynamic = ?, exchange_rate = ?, tax_rate = ? WHERE id = 1",
                              (is_dynamic, rate, tax))
             await db.commit()

@@ -1,7 +1,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from database import get_db_connection
+import aiosqlite
+from database import DB_PATH
 
 class Economy(commands.Cog):
     def __init__(self, bot):
@@ -9,7 +10,8 @@ class Economy(commands.Cog):
 
     @app_commands.command(name="shop", description="Lihat daftar barang yang dijual.")
     async def shop(self, interaction: discord.Interaction):
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute("SELECT * FROM items")
             items = await cursor.fetchall()
 
@@ -30,7 +32,8 @@ class Economy(commands.Cog):
     async def buy(self, interaction: discord.Interaction, item_name: str):
         user_id = interaction.user.id
 
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             # Check Item
             cursor = await db.execute("SELECT * FROM items WHERE name = ?", (item_name,))
             item = await cursor.fetchone()
@@ -65,7 +68,8 @@ class Economy(commands.Cog):
     async def inventory(self, interaction: discord.Interaction):
         user_id = interaction.user.id
 
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute("SELECT * FROM inventory WHERE user_id = ?", (user_id,))
             items = await cursor.fetchall()
 
@@ -95,7 +99,8 @@ class Economy(commands.Cog):
     @app_commands.describe(item_name="Nama barang")
     async def equip(self, interaction: discord.Interaction, item_name: str):
         user_id = interaction.user.id
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             # Check if user has item
             cursor = await db.execute("SELECT id, item_type FROM inventory WHERE user_id = ? AND item_name = ?", (user_id, item_name))
             item = await cursor.fetchone()
@@ -118,7 +123,8 @@ class Economy(commands.Cog):
     async def refurbish(self, interaction: discord.Interaction, item_name: str):
         user_id = interaction.user.id
 
-        async with await get_db_connection() as db:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute("SELECT * FROM inventory WHERE user_id = ? AND item_name = ?", (user_id, item_name))
             item = await cursor.fetchone()
 
